@@ -2,29 +2,37 @@
 #include <vector>
 #include <algorithm>
 
-size_t get_nearby_seats(std::vector<std::string> seats, int x, int y){
-    size_t nearby_seats = 0;
+size_t get_visible_seats(std::vector<std::string> seats, int x, int y){
+    size_t visible_seats = 0;
     int line_length = seats[0].length();
     int number_of_lines = seats.size();
 
     for(int rx = -1; rx <= 1; rx++){
         for(int ry = -1; ry <= 1; ry++){
+            int current_x = x + rx;
+            int current_y = y + ry;
             if(!(rx == 0 && ry == 0)){
-                int current_x = x + rx;
-                int current_y = y + ry;
-                if(   current_x >= 0
-                   && current_x < line_length
-                   && current_y >= 0
-                   && current_y < number_of_lines)
-                {
-                    if(seats[current_y][current_x] == '#')
-                        nearby_seats++;
-                }
+                while(   current_x >= 0
+                      && current_x < line_length
+                      && current_y >= 0
+                      && current_y < number_of_lines)
+                    {
+                        if(seats[current_y][current_x] == '#'){
+                            visible_seats++;
+                            break;
+                        }
+                        else if(seats[current_y][current_x] == 'L')
+                            break;
+                        else {
+                            current_x += rx;
+                            current_y += ry;
+                        }
+                    }
             }
         }
     }
 
-    return nearby_seats;
+    return visible_seats;
 }
 
 template <typename T>
@@ -51,10 +59,10 @@ int main(){
     while(true){
         for(size_t y = 0; y < seats.size(); y++){
             for(size_t x = 0; x < seats[0].length(); x++){
-                if(seats_swap[y][x] == 'L' && get_nearby_seats(seats_swap, x, y) == 0){
+                if(seats_swap[y][x] == 'L' && get_visible_seats(seats_swap, x, y) == 0){
                     seats[y][x] = '#';
                 }
-                else if(seats_swap[y][x] == '#' && get_nearby_seats(seats_swap, x, y) >= 4){
+                else if(seats_swap[y][x] == '#' && get_visible_seats(seats_swap, x, y) >= 5){
                     seats[y][x] = 'L';
                 }
             }

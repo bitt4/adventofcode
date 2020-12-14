@@ -19,18 +19,14 @@ int main(){
         case 'S': y -= units; break;
         case 'E': x += units; break;
         case 'W': x -= units; break;
-        case 'L':
-            direction -= units;
-            break;
-        case 'R':
-            direction += units;
-            break;
+        case 'L': direction -= units; break;
+        case 'R': direction += units; break;
         case 'F':
             switch(direction){
-            case 0:   y += units; break;
-            case 90:  x += units; break;
-            case 180: y -= units; break;
-            case 270: x -= units; break;
+                case 0:   y += units; break;
+                case 90:  x += units; break;
+                case 180: y -= units; break;
+                case 270: x -= units; break;
             }
             break;
         }

@@ -35,7 +35,7 @@ int main(){
 
     std::string my_ticket;
     uint32_t error_rate = 0;
-    std::vector<Range> fields;
+    std::vector<Range> notes_fields;
 
     for(size_t i = 0; i < 20; i++){
         std::string line;
@@ -59,7 +59,7 @@ int main(){
         field.max1 = to1;
         field.max2 = to2;
 
-        fields.push_back(field);
+        notes_fields.push_back(field);
     }
 
     std::cin.ignore();
@@ -69,21 +69,21 @@ int main(){
     std::cin.ignore();
     std::cin.ignore(256, '\n');
 
-    std::string ticket;
+    std::string nearby_ticket;
     for(size_t i = 0; i < 241; i++){
-        std::cin >> ticket;
-        auto ticket_fields = split_string(ticket, ',');
+        std::cin >> nearby_ticket;
+        auto nearby_ticket_fields = split_string(nearby_ticket, ',');
 
-        for(auto &current_field : ticket_fields){
+        for(auto &x : nearby_ticket_fields){
             bool in_range = false;
-            int current_field_int = std::stoi(current_field);
-            for(auto &field : fields){    /* bad variable naming */
-                if(field.in_range(current_field_int)){
+            int current_field = std::stoi(x);
+            for(auto &field : notes_fields){    /* bad variable naming */
+                if(field.in_range(current_field)){
                         in_range = true;
                 }
             }
             if (!in_range) {
-                error_rate += current_field_int;
+                error_rate += current_field;
                 break;
             }
         }

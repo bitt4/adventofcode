@@ -90,7 +90,7 @@ int main(){
 			passport_raw += " " + line;
 		}
 	}
-	
+
 	if (passport_raw.length() != 0) {
 		auto passport = parse_passport(passport_raw);
 		passports.push_back(passport);

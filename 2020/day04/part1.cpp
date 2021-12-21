@@ -3,9 +3,31 @@
 #include <array>
 #include <algorithm>
 
+struct Passport {
+    std::string byr;
+    std::string iyr;
+    std::string eyr;
+    std::string hgt;
+    std::string hcl;
+    std::string ecl;
+    std::string pid;
+    std::string cid;
+
+    bool contains_required_fields() const {
+        return !(byr.empty() ||
+                 iyr.empty() ||
+                 eyr.empty() ||
+                 hgt.empty() ||
+                 hcl.empty() ||
+                 ecl.empty() ||
+                 pid.empty()
+                 );
+    }
+};
+
 std::vector<std::string> split_string(const std::string& str, char delim = ' ') {
 	std::vector<std::string> output;
-	output.reserve(std::count(str.begin(), str.end(), delim + 1));
+	output.reserve(std::count(str.begin(), str.end(), delim) + 1);
 	size_t position = 0;
 
 	for (size_t i = 0; i < str.length(); ++i) {
@@ -26,52 +48,31 @@ std::vector<std::string> split_string(const std::string& str, char delim = ' ') 
 	return output;
 }
 
-std::vector<std::pair<std::string, std::string>> parse_passport(const std::string& raw) {
-	std::vector<std::pair<std::string, std::string>> output;
+Passport parse_passport(const std::string& raw) {
+    Passport output;
 
 	auto fields = split_string(raw);
 
 	for (const auto& f : fields) {
 		auto field_split = split_string(f, ':');
-		std::pair<std::string, std::string> field = { field_split[0], field_split[1] };
-		output.push_back(field);
-	}
+        auto field = field_split[0];
+        auto value = field_split[1];
 
-	return output;
-}
+             if (field.find("byr") == 0) { output.byr = value; }
+        else if (field.find("iyr") == 0) { output.iyr = value; }
+        else if (field.find("eyr") == 0) { output.eyr = value; }
+        else if (field.find("hgt") == 0) { output.hgt = value; }
+        else if (field.find("hcl") == 0) { output.hcl = value; }
+        else if (field.find("ecl") == 0) { output.ecl = value; }
+        else if (field.find("pid") == 0) { output.pid = value; }
+        else if (field.find("cid") == 0) { output.cid = value; }
+    }
 
-bool contains_required_fields(const std::vector<std::pair<std::string, std::string>>& passport) {
-	std::array<std::string, 7> required_fields = {
-		"byr",
-		"iyr",
-		"eyr",
-		"hgt",
-		"hcl",
-		"ecl",
-		"pid"
-	};
-
-	for (const auto& required_field : required_fields) {
-		bool contains = false;
-		for (const auto& field : passport) {
-			if (required_field == field.first) {
-				contains = true;
-				break;
-			}
-		}
-		if (!contains) {
-			return false;
-		}
-	}
-
-	return true;
+    return output;
 }
 
 int main(){
-
-	// bruh type
-	// TODO: Make this type nicer (struct Passport or something)
-	std::vector<std::vector<std::pair<std::string, std::string>>> passports;
+	std::vector<Passport> passports;
 
 	std::string passport_raw;
 	std::string line;
@@ -99,7 +100,7 @@ int main(){
 	size_t valid = 0;
 
 	for (const auto& passport : passports) {
-		if (contains_required_fields(passport)){
+		if (passport.contains_required_fields()){
 			valid++;
 		}
 	}

@@ -22,6 +22,52 @@ struct Passport {
                  pid.empty()
                  );
     }
+
+    bool valid() const {
+        int birth_year = std::stoi(byr); // bruh, don't catch exceptions
+        if (!(1920 <= birth_year && birth_year <= 2002)) { return false; }
+
+        int issue_year = std::stoi(iyr);
+        if (!(2010 <= issue_year && issue_year <= 2020)) { return false; }
+
+        int expiration_year = std::stoi(eyr);
+        if (!(2020 <= expiration_year && expiration_year <= 2030)) { return false; }
+
+        if (hgt.length() < 4) { return false; }
+        int height = std::stoi(hgt.substr(0, hgt.length() - 2));
+        bool valid_height = false;
+        if (hgt.find("cm") != std::string::npos) {
+            valid_height = (150 <= height && height <= 193);
+        } else if (hgt.find("in") != std::string::npos) {
+            valid_height = (59 <= height && height <= 76);
+        }
+
+        if (!valid_height) { return false; }
+
+        if (hcl[0] != '#' ||
+            hcl.length() != 7 ||
+            hcl.substr(1).find_first_not_of("0123456789abcdef") != std::string::npos)
+        {
+            return false;
+        }
+
+        if (ecl != "amb" &&
+            ecl != "blu" &&
+            ecl != "brn" &&
+            ecl != "gry" &&
+            ecl != "grn" &&
+            ecl != "hzl" &&
+            ecl != "oth")
+        {
+            return false;
+        }
+
+        if (pid.length() != 9 || pid.find_first_not_of("0123456789") != std::string::npos) {
+            return false;
+        }
+
+        return true;
+    }
 };
 
 std::vector<std::string> split_string(const std::string& str, char delim = ' ') {
@@ -96,15 +142,20 @@ int main(){
 		passports.push_back(passport);
 	}
 
-	size_t valid = 0;
+	size_t part1 = 0,
+           part2 = 0;
 
 	for (const auto& passport : passports) {
-		if (passport.contains_required_fields()){
-			valid++;
+		if (passport.contains_required_fields()) {
+            part1++;
+            if (passport.valid()) {
+                part2++;
+            }
 		}
 	}
 
-	std::cout << valid << '\n';
+	std::cout << "Part 1: " << part1 << '\n';
+    std::cout << "Part 2: " << part2 << '\n';
 
 	return 0;
 }

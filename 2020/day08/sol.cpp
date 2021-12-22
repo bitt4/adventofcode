@@ -90,10 +90,11 @@ int run(const std::vector<std::string>& instructions, int64_t repair_index = -1)
 
 int main(){
     std::vector<std::string> instructions;
-    instructions.resize(591);
+    instructions.reserve(591);
 
-    for(size_t i = 0; i < instructions.size(); i++){
-        std::getline(std::cin, instructions[i]);
+    std::string line;
+    while (std::getline(std::cin, line)) {
+        instructions.push_back(line);
     }
 
     int part1 = run(instructions);

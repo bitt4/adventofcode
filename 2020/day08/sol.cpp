@@ -48,6 +48,7 @@ int run(const std::vector<std::string>& instructions, int64_t repair_index = -1)
             if (repair_index == -1) {
                 break;
             } else {
+                delete[] has_been_executed;
                 return run(instructions, repair_index + 1);
                 // if emulated program terminates (executes
                 // instruction after the last one), it'll exit this
@@ -83,6 +84,7 @@ int run(const std::vector<std::string>& instructions, int64_t repair_index = -1)
         }
     }
 
+    delete[] has_been_executed;
     return acc;
 }
 

@@ -33,6 +33,16 @@ struct Bag {
 
         return count;
     }
+
+    int children_sum() {
+        int sum = 0;
+        for (auto& child : children) {
+            int amount = child.first;
+            sum += amount;
+            sum += amount * child.second->children_sum();
+        }
+        return sum;
+    }
 };
 
 int main() {
@@ -82,6 +92,7 @@ int main() {
     }
 
     std::cout << "part 1: " << bags["shiny gold"]->parents_count() << '\n';
+    std::cout << "part 2: " << bags["shiny gold"]->children_sum() << '\n';
 
     return 0;
 }

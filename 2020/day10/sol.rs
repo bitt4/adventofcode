@@ -6,7 +6,7 @@ fn main() {
 
     let adapters: BTreeSet<_> = input
         .lines()
-        .map(|line| line.parse::<u32>().unwrap())
+        .map(|line| line.parse::<u64>().unwrap())
         .collect();
 
     let mut one_jold_diff = 0;
@@ -24,4 +24,14 @@ fn main() {
     });
 
     println!("part 1: {}", one_jold_diff * three_jold_diff);
+
+    let mut dp: Vec<u64> = vec![0; (*adapters.iter().last().unwrap() + 1) as usize];
+    dp[0] = 1;
+
+    adapters.iter().for_each(|&d| {
+        let d = d as usize;
+        dp[d] = dp.iter().rev().skip(dp.len() - d).take(3).sum();
+    });
+
+    println!("part 2: {}", dp.last().unwrap());
 }

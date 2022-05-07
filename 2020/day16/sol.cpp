@@ -1,14 +1,17 @@
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <vector>
 
-struct Range {
-    int min1,
-    max1,
-    min2,
-    max2;
+using Ticket = std::vector<int>;
 
-    bool in_range(int num) const {
+struct Rule {
+    int min1,
+        max1,
+        min2,
+        max2;
+
+    bool is_valid(int num) const {
         return (min1 <= num && num <= max1) || (min2 <= num && num <= max2);
     }
 };
@@ -24,9 +27,20 @@ std::vector<std::string> split_string(std::string s, const std::string delim, st
     }
 }
 
+std::vector<int> string_vec_to_int_vec(std::vector<std::string> src) {
+    std::vector<int> result;
+    result.reserve(src.size());
+
+    for (auto s : src) {
+        result.push_back(std::stoi(s));
+    }
+
+    return result;
+}
+
 int main(){
     std::ifstream input("input");
-    std::vector<Range> notes_fields;
+    std::vector<Rule> rules;
 
     for (size_t i = 0; i < 20; i++) {
         std::string line;
@@ -44,47 +58,124 @@ int main(){
         int from2 = std::stoi(range2[0]);
         int to2 = std::stoi(range2[1]);
 
-        Range field {
+        Rule field {
             from1,
             to1,
             from2,
             to2
         };
 
-        notes_fields.push_back(field);
+        rules.push_back(field);
     }
 
     input.ignore();
     input.ignore(256, '\n');
 
-    std::string my_ticket;
-    std::getline(input, my_ticket);
+    std::string my_ticket_raw;
+    std::getline(input, my_ticket_raw);
+
+    auto my_ticket = string_vec_to_int_vec(split_string(my_ticket_raw, ","));
 
     input.ignore();
     input.ignore(256, '\n');
 
     uint32_t error_rate = 0;
 
-    std::string nearby_ticket;
-    while (std::getline(input, nearby_ticket)) {
-        auto nearby_ticket_fields = split_string(nearby_ticket, ",");
+    std::vector<Ticket> almost_valid_tickets;
 
-        for (auto &x : nearby_ticket_fields) {
+    std::string nearby_ticket_raw;
+    while (std::getline(input, nearby_ticket_raw)) {
+        auto nearby_ticket = string_vec_to_int_vec(split_string(nearby_ticket_raw, ","));
+
+        bool has_valid_field = false;
+        for (auto &current_field : nearby_ticket) {
             bool in_range = false;
-            int current_field = std::stoi(x);
-            for (auto &field : notes_fields) {    /* bad variable naming */
-                if (field.in_range(current_field)) {
+            for (auto &rule : rules) {
+                if (rule.is_valid(current_field)) {
                     in_range = true;
+                    break;
                 }
             }
             if (!in_range) {
                 error_rate += current_field;
                 break;
             }
+            has_valid_field = true;
+        }
+
+        if (has_valid_field) {
+            almost_valid_tickets.push_back(nearby_ticket);
         }
     }
 
-    std::cout << error_rate << '\n';
+    std::cout << "part 1: " << error_rate << '\n';
+
+    std::vector<Ticket> valid_tickets;
+    for (auto ticket : almost_valid_tickets) {
+        bool all_fields_valid = true;
+        for (auto &field : ticket) {
+            bool valid_field = false;
+            for (auto &rule : rules) {
+                if (rule.is_valid(field)) {
+                    valid_field = true;
+                    break;
+                }
+            }
+            if (!valid_field) {
+                all_fields_valid = false;
+                break;
+            }
+        }
+        if (all_fields_valid) {
+            valid_tickets.push_back(ticket);
+        }
+    }
+
+    std::vector<std::vector<int>> possible_fields(rules.size());
+
+    for (size_t i = 0; i < rules.size(); ++i) {
+        for (size_t j = 0; j < rules.size(); ++j) {
+            bool rule_passes = true;
+            for (const auto& ticket : valid_tickets) {
+                if (!rules[i].is_valid(ticket[j])) {
+                    rule_passes = false;
+                    break;
+                }
+            }
+            if (rule_passes) {
+                possible_fields[i].push_back(j);
+            }
+        }
+    }
+
+    uint32_t resolved = 0;
+    for (size_t i = 0; i < rules.size() - 1; ++i) {
+        for (size_t j = 0; j < possible_fields.size(); ++j) {
+            auto field = possible_fields[j];
+            if (field.size() == 1) {
+                if (!(resolved & (1 << field[0]))) {
+                    resolved |= 1 << field[0];
+                    for (size_t k = 0; k < possible_fields.size(); ++k) {
+                        if (k != j) {
+                            auto pos = std::find(possible_fields[k].begin(),
+                                                 possible_fields[k].end(),
+                                                 field[0]);
+                            if (pos != possible_fields[k].end()) {
+                                possible_fields[k].erase(pos);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    uint64_t part2 = 1;
+    for (int i = 0; i < 6; ++i) {    // i need only first 6 fields
+        part2 *= my_ticket[possible_fields[i][0]];
+    }
+
+    std::cout << "part 2: " << part2 << '\n';
 
     return 0;
 }

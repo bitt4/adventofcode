@@ -62,7 +62,7 @@ int main() {
     };
 
     std::string line;
-    while(std::getline(input, line)) {
+    while (std::getline(input, line)) {
         const std::string split_by = " bags contain ";
         auto pos = line.find(split_by);
         std::string color = line.substr(0, pos);

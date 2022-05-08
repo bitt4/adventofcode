@@ -3,7 +3,7 @@
 #include <set>
 #include <vector>
 
-int main(){
+int main() {
     std::ifstream input("input");
 
     std::set<uint64_t> adapters;

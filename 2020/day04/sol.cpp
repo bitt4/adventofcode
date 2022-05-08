@@ -116,7 +116,7 @@ Passport parse_passport(const std::string& raw) {
     return output;
 }
 
-int main(){
+int main() {
 	std::vector<Passport> passports;
 
 	std::string passport_raw;
@@ -154,8 +154,8 @@ int main(){
 		}
 	}
 
-	std::cout << "Part 1: " << part1 << '\n';
-    std::cout << "Part 2: " << part2 << '\n';
+    std::cout << "part 1: " << part1 << '\n';
+    std::cout << "part 2: " << part2 << '\n';
 
 	return 0;
 }

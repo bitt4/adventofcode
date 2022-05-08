@@ -131,7 +131,7 @@ int main(){
         }
     }
 
-    std::vector<std::vector<int>> possible_fields(rules.size());
+    std::vector<uint32_t> possible_fields(rules.size());
 
     for (size_t i = 0; i < rules.size(); ++i) {
         for (size_t j = 0; j < rules.size(); ++j) {
@@ -143,7 +143,7 @@ int main(){
                 }
             }
             if (rule_passes) {
-                possible_fields[i].push_back(j);
+                possible_fields[i] |= (1 << j);
             }
         }
     }
@@ -152,17 +152,12 @@ int main(){
     for (size_t i = 0; i < rules.size() - 1; ++i) {
         for (size_t j = 0; j < possible_fields.size(); ++j) {
             auto field = possible_fields[j];
-            if (field.size() == 1) {
-                if (!(resolved & (1 << field[0]))) {
-                    resolved |= 1 << field[0];
+            if (__builtin_popcount(field) == 1) {
+                if (!(resolved & field)) {
+                    resolved |= field;
                     for (size_t k = 0; k < possible_fields.size(); ++k) {
                         if (k != j) {
-                            auto pos = std::find(possible_fields[k].begin(),
-                                                 possible_fields[k].end(),
-                                                 field[0]);
-                            if (pos != possible_fields[k].end()) {
-                                possible_fields[k].erase(pos);
-                            }
+                            possible_fields[k] &= ~field;
                         }
                     }
                 }
@@ -172,7 +167,7 @@ int main(){
 
     uint64_t part2 = 1;
     for (int i = 0; i < 6; ++i) {    // i need only first 6 fields
-        part2 *= my_ticket[possible_fields[i][0]];
+        part2 *= my_ticket[__builtin_ctz(possible_fields[i])];
     }
 
     std::cout << "part 2: " << part2 << '\n';

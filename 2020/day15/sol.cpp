@@ -5,11 +5,11 @@
 
 using u32 = uint32_t;
 
-std::vector<std::string> split_string(std::string s, const std::string delim, std::vector<std::string>&& acc = {}) {
+std::vector<std::string> split_string(std::string s, const std::string delim, std::vector<std::string> acc = {}) {
     auto pos = s.find(delim);
     if (pos != std::string::npos) {
         acc.push_back(s.substr(0, pos));
-        return split_string(s.substr(pos + delim.length()), delim, std::move(acc));
+        return split_string(s.substr(pos + delim.length()), delim, acc);
     } else {
         acc.push_back(s);
         return acc;
@@ -24,7 +24,7 @@ int main() {
     input_file.close();
 
     u32 turn = 1;
-    for (const auto x : split_string(input, ",")) {
+    for (const auto &x : split_string(input, ",")) {
         numbers[std::stoul(x)] = turn++;
     }
 

@@ -4,11 +4,11 @@
 #include <vector>
 #include <map>
 
-std::vector<std::string> split(std::string s, const std::string delim, std::vector<std::string>&& acc = {}) {
+std::vector<std::string> split(std::string s, const std::string delim, std::vector<std::string> acc = {}) {
     auto pos = s.find(delim);
     if (pos != std::string::npos) {
         acc.push_back(s.substr(0, pos));
-        return split(s.substr(pos + delim.length()), delim, std::move(acc));
+        return split(s.substr(pos + delim.length()), delim, acc);
     } else {
         acc.push_back(s);
         return acc;

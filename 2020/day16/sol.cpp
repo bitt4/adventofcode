@@ -40,6 +40,11 @@ std::vector<int> string_vec_to_int_vec(std::vector<std::string> src) {
 
 int main(){
     std::ifstream input("input");
+    if (!input.is_open()) {
+        std::cerr << "Can't read puzzle input file.\n";
+        return -1;
+    }
+
     std::vector<Rule> rules;
 
     for (size_t i = 0; i < 20; i++) {

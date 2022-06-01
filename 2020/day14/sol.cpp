@@ -54,6 +54,11 @@ void fill_memory(std::map<u64, u64>& memory, u64 address, u64 value, std::string
 
 int main() {
     std::ifstream input("input");
+    if (!input.is_open()) {
+        std::cerr << "Can't read puzzle input file.\n";
+        return -1;
+    }
+
     std::map<u64, u64> memory;
     std::vector<std::tuple<u64, u64, std::string>> program;
 

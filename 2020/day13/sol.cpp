@@ -24,6 +24,10 @@ std::vector<std::string> split_string (const std::string& target, char delimeter
 
 int main(){
     std::ifstream input("input");
+    if (!input.is_open()) {
+        std::cerr << "Can't read puzzle input file.\n";
+        return -1;
+    }
 
     u64 earliest;
     std::string line;

@@ -17,9 +17,15 @@ std::vector<std::string> split_string(std::string s, const std::string delim, st
 }
 
 int main() {
+    std::ifstream input_file("input");
+    if (!input_file.is_open()) {
+        std::cerr << "Can't read puzzle input file.\n";
+        return -1;
+    }
+
     std::map<u32, u32> numbers;
     std::string input;
-    std::ifstream input_file("input");
+
     std::getline(input_file, input);
     input_file.close();
 

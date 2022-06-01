@@ -5,6 +5,10 @@
 
 int main() {
     std::ifstream input("input");
+    if (!input.is_open()) {
+        std::cerr << "Can't read puzzle input file.\n";
+        return -1;
+    }
 
     std::set<uint64_t> adapters;
 

@@ -23,6 +23,11 @@ uint32_t check_slope(const std::vector<std::string>& area, int xs, int ys) {
 
 int main() {
     std::ifstream input("input");
+    if (!input.is_open()) {
+        std::cerr << "Can't read puzzle input file.\n";
+        return -1;
+    }
+
     std::vector<std::string> forest;
     uint32_t pos = 0, trees = 0;
 

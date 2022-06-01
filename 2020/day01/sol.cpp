@@ -4,6 +4,11 @@
 
 int main(){
     std::ifstream input("input");
+    if (!input.is_open()) {
+        std::cerr << "Can't read puzzle input file.\n";
+        return -1;
+    }
+
     std::multiset<int> numbers;
 
     int tmp;

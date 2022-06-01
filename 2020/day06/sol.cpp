@@ -4,6 +4,11 @@
 
 int main() {
     std::ifstream input("input");
+    if (!input.is_open()) {
+        std::cerr << "Can't read puzzle input file.\n";
+        return -1;
+    }
+
     std::map<char, int> group_answ;
     uint32_t anyone = 0;
     uint32_t everyone = 0;

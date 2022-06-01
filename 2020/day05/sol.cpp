@@ -4,6 +4,10 @@
 
 int main() {
     std::ifstream input("input");
+    if (!input.is_open()) {
+        std::cerr << "Can't read puzzle input file.\n";
+        return -1;
+    }
 
     int max = 0;
     std::map<int, bool> seats;

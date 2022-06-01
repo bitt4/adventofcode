@@ -24,6 +24,11 @@ std::vector<std::string> split_string(std::string target, const char delimeter =
 
 int main() {
     std::ifstream input("input");
+    if (!input.is_open()) {
+        std::cerr << "Can't read puzzle input file.\n";
+        return -1;
+    }
+
     int valid_passwords_1 = 0;
     int valid_passwords_2 = 0;
     std::string range, rule, password;

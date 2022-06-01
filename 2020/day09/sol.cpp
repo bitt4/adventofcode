@@ -5,6 +5,10 @@
 
 int main() {
     std::ifstream input("input");
+    if (!input.is_open()) {
+        std::cerr << "Can't read puzzle input file.\n";
+        return -1;
+    }
 
     constexpr size_t input_size = 1000;
     std::vector<uint64_t> numbers;

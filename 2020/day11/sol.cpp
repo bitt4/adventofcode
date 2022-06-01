@@ -109,6 +109,11 @@ size_t occupied_seats(std::vector<std::string> seats,
 
 int main() {
     std::ifstream input("input");
+    if (!input.is_open()) {
+        std::cerr << "Can't read puzzle input file.\n";
+        return -1;
+    }
+
     std::vector<std::string> seats;
 
     std::string line;

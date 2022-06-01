@@ -1,3 +1,4 @@
+#include <fstream>
 #include <iostream>
 #include <vector>
 
@@ -78,6 +79,7 @@ int run(const std::vector<std::string>& instructions, int64_t repair_index = -1)
                 break;
             case ACC:
                 acc += arg;
+                [[fallthrough]];
             case NOP:
             default:
                 ip++;
@@ -89,11 +91,17 @@ int run(const std::vector<std::string>& instructions, int64_t repair_index = -1)
 }
 
 int main() {
+    std::ifstream input("input");
+    if (!input.is_open()) {
+        std::cerr << "Can't read puzzle input file.\n";
+        return -1;
+    }
+
     std::vector<std::string> instructions;
     instructions.reserve(591);
 
     std::string line;
-    while (std::getline(std::cin, line)) {
+    while (std::getline(input, line)) {
         instructions.push_back(line);
     }
 

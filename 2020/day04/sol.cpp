@@ -1,3 +1,4 @@
+#include <fstream>
 #include <iostream>
 #include <vector>
 #include <algorithm>
@@ -117,17 +118,23 @@ Passport parse_passport(const std::string& raw) {
 }
 
 int main() {
+    std::ifstream input("input");
+    if (!input.is_open()) {
+        std::cerr << "Can't read puzzle input file.\n";
+        return -1;
+    }
+
 	std::vector<Passport> passports;
 
 	std::string passport_raw;
 	std::string line;
 
-	while(std::getline(std::cin, line)){
+    while(std::getline(input, line)){
 		if (line.length() == 0) {
 			auto passport = parse_passport(passport_raw);
 			passports.push_back(passport);
 			passport_raw = "";
-		} else if (std::cin.eof()) {
+        } else if (input.eof()) {
 			passport_raw += " " + line;
 			auto passport = parse_passport(passport_raw);
 			passports.push_back(passport);

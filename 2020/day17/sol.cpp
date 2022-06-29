@@ -67,7 +67,7 @@ Grid4d cycle(Grid4d current_state, bool four_dim = false) {
     return next_state;
 }
 
-int count_active(Grid4d grid, bool four_dim = false) {
+int count_active(const Grid4d& grid, bool four_dim = false) {
     int count = 0;
     for (int w = (four_dim ? 0 : 6); w < (four_dim ? std::ssize(grid) : 7); ++w) {
         for (int z = 0; z < std::ssize(grid[0]); ++z) {
@@ -100,15 +100,14 @@ int main() {
 
     Grid4d grid = {};
     {
-        int y = 0;
         std::string line;
-        while (std::getline(input, line)) {
+        for (int y = 0; std::getline(input, line); ++y) {
             for (size_t x = 0; x < line.size(); ++x) {
                 grid[6][6][y + 6][x + 6] = line[x];
             }
-            y++;
         }
     }
+    input.close();
 
     std::cout << "part 1: " << simulate(grid) << '\n';
     std::cout << "part 2: " << simulate(grid, true) << '\n';

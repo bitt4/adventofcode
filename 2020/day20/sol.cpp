@@ -2,6 +2,9 @@
 #include <array>
 #include <fstream>
 #include <iostream>
+#include <map>
+#include <queue>
+#include <set>
 #include <vector>
 
 static constexpr size_t TILE_SIZE = 10;
@@ -23,17 +26,13 @@ std::vector<std::string> split_string(std::string s, const std::string delim = "
 }
 
 bool matches_right(const Tile& left, const Tile& right) {
-    std::string left_side {};
     for (size_t i = 0; i < TILE_SIZE; ++i) {
-        left_side += left.data[i][TILE_SIZE - 1];
+        if (left.data[i][TILE_SIZE - 1] != right.data[i][0]) {
+            return false;
+        }
     }
 
-    std::string right_side {};
-    for (size_t i = 0; i < TILE_SIZE; ++i) {
-        right_side += right.data[i][0];
-    }
-
-    return left_side == right_side;
+    return true;
 }
 
 bool matches_left(const Tile& left, const Tile& right) {
@@ -70,47 +69,6 @@ Tile flip(Tile tile) {
     return tile;
 }
 
-bool matches(const Tile& left, const Tile& right) {
-    auto matches_sides = [](const Tile& a, const Tile& b) {
-        if (matches_right(a, b) || matches_left(a, b) || matches_top(a, b) || matches_bottom(a, b)) {
-            return true;
-        }
-        return false;
-    };
-
-    std::vector<Tile> all_rotations = {
-        left,
-        rotate(left),
-        rotate(rotate(left)),
-        rotate(rotate(rotate(left))),
-        flip(left),
-        rotate(flip(left)),
-        rotate(rotate(flip(left))),
-        rotate(rotate(rotate(flip(left))))
-    };
-
-    for (const auto& tile : all_rotations) {
-        if (matches_sides(tile, right)) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-bool is_corner(const Tile& tile, const std::vector<Tile>& tiles) {
-    int matches_with = 0;
-    for (const auto& another_tile : tiles) {
-        if (tile.id != another_tile.id) {
-            if (matches(tile, another_tile)) {
-                matches_with++;
-            }
-        }
-    }
-
-    return matches_with == 2;
-}
-
 int main() {
     std::ifstream input("input");
     if (!input.is_open()) {
@@ -137,13 +95,82 @@ int main() {
         std::getline(input, line); // consume blank line after tile data in input file
     }
 
-    uint64_t part1 = 1;
-    for (const auto& tile : tiles) {
-        if (is_corner(tile, tiles)) {
-            part1 *= tile.id;
+    std::set<int> visited;
+    std::queue<std::pair<Tile, std::pair<int, int>>> to_visit;
+    std::map<std::pair<int, int>, Tile> relative_positions;
+
+    relative_positions[{ 0, 0 }] = tiles[0];
+    to_visit.push({ tiles[0], { 0, 0 } });
+    while (!to_visit.empty()) {
+        auto [tile, position] = to_visit.front();
+        auto [x, y] = position;
+        to_visit.pop();
+
+        for (const auto& another_tile : tiles) {
+            if (tile.id == another_tile.id || visited.contains(another_tile.id)) {
+                continue;
+            }
+
+            std::array<Tile, 8> rotations;
+
+            rotations[0] = another_tile;
+            for (int i = 1; i < 4; ++i) {
+                rotations[i] = rotate(rotations[i - 1]);
+            }
+
+            rotations[4] = flip(another_tile);
+            for (int i = 5; i < 8; ++i) {
+                rotations[i] = rotate(rotations[i - 1]);
+            }
+
+            for (auto rotated : rotations) {
+                int dx = 0;
+                int dy = 0;
+                if (matches_right(tile, rotated)) {
+                    dx = 1;
+                } else if (matches_top(tile, rotated)) {
+                    dy = -1;
+                } else if (matches_left(tile, rotated)) {
+                    dx = -1;
+                } else if (matches_bottom(tile, rotated)) {
+                    dy = 1;
+                } else {
+                    continue;
+                }
+
+                to_visit.push({ rotated, { x + dx, y + dy } });
+                relative_positions[{ x + dx, y + dy }] = rotated;
+                visited.insert(tile.id);
+                visited.insert(rotated.id);
+                break;
+            }
         }
     }
 
+    int top_row = 0;
+    while (relative_positions.contains({ top_row - 1, 0 })) {
+        top_row--;
+    }
+
+    int bottom_row = 0;
+    while (relative_positions.contains({ bottom_row + 1, 0 })) {
+        bottom_row++;
+    }
+
+    int right_col = 0;
+    while (relative_positions.contains({ 0, right_col + 1 })) {
+        right_col++;
+    }
+
+    int left_col = 0;
+    while (relative_positions.contains({ 0, left_col - 1 })) {
+        left_col--;
+    }
+
+    uint64_t part1 = relative_positions[{ top_row, left_col }].id
+        * relative_positions[{ top_row, right_col }].id
+        * relative_positions[{ bottom_row, left_col }].id
+        * relative_positions[{ bottom_row, right_col }].id;
     std::cout << "part 1: " << part1 << '\n';
 
     return 0;

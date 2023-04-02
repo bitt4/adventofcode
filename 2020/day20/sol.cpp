@@ -11,7 +11,7 @@ static constexpr size_t TILE_SIZE = 10;
 
 struct Tile {
     uint64_t id;
-    std::array<std::string, TILE_SIZE> data;
+    std::vector<std::string> data { TILE_SIZE };
 };
 
 std::vector<std::string> split_string(std::string s, const std::string delim = " ", std::vector<std::string> acc = {}) {
@@ -51,11 +51,11 @@ Tile rotate(const Tile& tile) {
     Tile new_tile;
     new_tile.id = tile.id;
 
-    for (size_t i = 0; i < TILE_SIZE; ++i) {
+    for (size_t i = 0; i < tile.data.size(); ++i) {
         std::string line {};
 
-        for (size_t j = 0; j < TILE_SIZE; ++j) {
-            line += tile.data[TILE_SIZE - j - 1][i];
+        for (size_t j = 0; j < tile.data.size(); ++j) {
+            line += tile.data[tile.data.size() - j - 1][i];
         }
 
         new_tile.data[i] = line;
@@ -67,6 +67,45 @@ Tile rotate(const Tile& tile) {
 Tile flip(Tile tile) {
     std::reverse(tile.data.begin(), tile.data.end());
     return tile;
+}
+
+std::vector<std::string> remove_monsters(std::vector<std::string> image) {
+    const std::vector<std::string> monster = {
+        "                  # ",
+        "#    ##    ##    ###",
+        " #  #  #  #  #  #   "
+    };
+
+    for (size_t y = 0; y < image.size() - 2; ++y) {
+        for (size_t x = 0; x < image[y].size() - monster[0].size() + 1; ++x) {
+            bool monster_matches = true;
+            for (size_t m = 0; m < monster.size(); ++m) {
+                for (size_t j = 0; j < monster[0].size(); ++j) {
+                    if (monster[m][j] == ' ') {
+                        continue;
+                    }
+                    if (monster[m][j] != image[y + m][x + j]) {
+                        monster_matches = false;
+                        break;
+                    }
+                }
+                if (!monster_matches) {
+                    break;
+                }
+            }
+            if (monster_matches) {
+                for (size_t m = 0; m < monster.size(); ++m) {
+                    for (size_t j = 0; j < monster[0].size(); ++j) {
+                        if (monster[m][j] != ' ') {
+                            image[y + m][x + j] = 'O';
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return image;
 }
 
 int main() {
@@ -83,7 +122,7 @@ int main() {
         std::string id_with_colon = split_string(line)[1];
         uint64_t id = std::stoi(id_with_colon.substr(0, id_with_colon.length() - 1));
 
-        std::array<std::string, TILE_SIZE> data;
+        std::vector<std::string> data(TILE_SIZE);
         std::string data_line;
         for (size_t i = 0; i < TILE_SIZE; ++i) {
             std::getline(input, data_line);
@@ -148,30 +187,82 @@ int main() {
     }
 
     int top_row = 0;
-    while (relative_positions.contains({ top_row - 1, 0 })) {
+    while (relative_positions.contains({ 0, top_row - 1 })) {
         top_row--;
     }
 
     int bottom_row = 0;
-    while (relative_positions.contains({ bottom_row + 1, 0 })) {
+    while (relative_positions.contains({ 0, bottom_row + 1 })) {
         bottom_row++;
     }
 
     int right_col = 0;
-    while (relative_positions.contains({ 0, right_col + 1 })) {
+    while (relative_positions.contains({ right_col + 1, 0 })) {
         right_col++;
     }
 
     int left_col = 0;
-    while (relative_positions.contains({ 0, left_col - 1 })) {
+    while (relative_positions.contains({ left_col - 1, 0 })) {
         left_col--;
     }
 
-    uint64_t part1 = relative_positions[{ top_row, left_col }].id
-        * relative_positions[{ top_row, right_col }].id
-        * relative_positions[{ bottom_row, left_col }].id
-        * relative_positions[{ bottom_row, right_col }].id;
+    uint64_t part1 = relative_positions[{ left_col, top_row }].id
+        * relative_positions[{ right_col, top_row }].id
+        * relative_positions[{ left_col, bottom_row }].id
+        * relative_positions[{ right_col, bottom_row }].id;
     std::cout << "part 1: " << part1 << '\n';
+
+    std::vector<std::string> image;
+
+    for (int y = top_row; y <= bottom_row; ++y) {
+        for (size_t line_y = 1; line_y < TILE_SIZE - 1; ++line_y) {
+            std::string line {};
+            for (int x = left_col; x <= right_col; ++x) {
+                line += relative_positions[{ x, y }].data[line_y].substr(1, TILE_SIZE - 2);
+            }
+            image.push_back(line);
+        }
+    }
+
+    auto rotate_vector = [](const std::vector<std::string>& vec) {
+        std::vector<std::string> out;
+
+        for (size_t x = 0; x < vec[0].size(); ++x) {
+            std::string line;
+            for (size_t y = 0; y < vec.size(); ++y) {
+                line += vec[vec.size() - y - 1][x];
+            }
+            out.push_back(line);
+        }
+
+        return out;
+    };
+
+    std::array<std::vector<std::string>, 8> rotations;
+    rotations[0] = image;
+    for (int i = 1; i < 4; ++i) {
+        rotations[i] = rotate_vector(rotations[i - 1]);
+    }
+
+    std::reverse(image.begin(), image.end());
+
+    rotations[4] = image;
+    for (int i = 5; i < 8; ++i) {
+        rotations[i] = rotate_vector(rotations[i - 1]);
+    }
+
+    uint32_t part2 = 0;
+    for (const auto& rotation : rotations) {
+        if (auto removed = remove_monsters(rotation); removed != rotation) {
+            for (auto line : removed) {
+                part2 += std::count_if(line.begin(), line.end(), [](char c) {
+                    return c == '#';
+                });
+            }
+        }
+    }
+
+    std::cout << "part 2: " << part2 << '\n';
 
     return 0;
 }

@@ -9,9 +9,11 @@
 
 static constexpr size_t TILE_SIZE = 10;
 
+using u64 = uint64_t;
+
 struct Tile {
-    uint64_t id;
-    std::vector<std::string> data { TILE_SIZE };
+    u64 id;
+    std::array<std::string, TILE_SIZE> data;
 };
 
 std::vector<std::string> split_string(std::string s, const std::string delim = " ", std::vector<std::string> acc = {}) {
@@ -51,11 +53,12 @@ Tile rotate(const Tile& tile) {
     Tile new_tile;
     new_tile.id = tile.id;
 
-    for (size_t i = 0; i < tile.data.size(); ++i) {
+    auto len = tile.data.size();
+    for (size_t i = 0; i < len; ++i) {
         std::string line {};
 
-        for (size_t j = 0; j < tile.data.size(); ++j) {
-            line += tile.data[tile.data.size() - j - 1][i];
+        for (size_t j = 0; j < len; ++j) {
+            line += tile.data[len - j - 1][i];
         }
 
         new_tile.data[i] = line;
@@ -76,28 +79,32 @@ std::vector<std::string> remove_monsters(std::vector<std::string> image) {
         " #  #  #  #  #  #   "
     };
 
+    // compare each 'window' of the image with the monster
     for (size_t y = 0; y < image.size() - 2; ++y) {
         for (size_t x = 0; x < image[y].size() - monster[0].size() + 1; ++x) {
             bool monster_matches = true;
-            for (size_t m = 0; m < monster.size(); ++m) {
-                for (size_t j = 0; j < monster[0].size(); ++j) {
-                    if (monster[m][j] == ' ') {
+            for (size_t ym = 0; ym < monster.size(); ++ym) {
+                for (size_t xm = 0; xm < monster[0].size(); ++xm) {
+                    if (monster[ym][xm] == ' ') {
                         continue;
                     }
-                    if (monster[m][j] != image[y + m][x + j]) {
+                    if (monster[ym][xm] != image[y + ym][x + xm]) {
                         monster_matches = false;
-                        break;
+                        // using goto to exit nested for loops
+                        goto MONSTER_NOT_FOUND;
                     }
                 }
-                if (!monster_matches) {
-                    break;
-                }
             }
+
+            // this label could technically be placed at the end of the loop
+            // and we wouldn't even need the `bool monster_matches`, but I
+            // think this is more readable, let the compiler do it's magic
+        MONSTER_NOT_FOUND:
             if (monster_matches) {
-                for (size_t m = 0; m < monster.size(); ++m) {
-                    for (size_t j = 0; j < monster[0].size(); ++j) {
-                        if (monster[m][j] != ' ') {
-                            image[y + m][x + j] = 'O';
+                for (size_t ym = 0; ym < monster.size(); ++ym) {
+                    for (size_t xm = 0; xm < monster[0].size(); ++xm) {
+                        if (monster[ym][xm] != ' ') {
+                            image[y + ym][x + xm] = 'O';
                         }
                     }
                 }
@@ -120,9 +127,9 @@ int main() {
     std::string line;
     while (std::getline(input, line)) {
         std::string id_with_colon = split_string(line)[1];
-        uint64_t id = std::stoi(id_with_colon.substr(0, id_with_colon.length() - 1));
+        u64 id = std::stoi(id_with_colon.substr(0, id_with_colon.length() - 1));
 
-        std::vector<std::string> data(TILE_SIZE);
+        std::array<std::string, TILE_SIZE> data;
         std::string data_line;
         for (size_t i = 0; i < TILE_SIZE; ++i) {
             std::getline(input, data_line);
@@ -134,12 +141,15 @@ int main() {
         std::getline(input, line); // consume blank line after tile data in input file
     }
 
-    std::set<int> visited;
-    std::queue<std::pair<Tile, std::pair<int, int>>> to_visit;
-    std::map<std::pair<int, int>, Tile> relative_positions;
+    using Coordinates = std::pair<int, int>;
 
+    std::map<Coordinates, Tile> relative_positions;
     relative_positions[{ 0, 0 }] = tiles[0];
+
+    std::set<int> visited;
+    std::queue<std::pair<Tile, Coordinates>> to_visit;
     to_visit.push({ tiles[0], { 0, 0 } });
+
     while (!to_visit.empty()) {
         auto [tile, position] = to_visit.front();
         auto [x, y] = position;
@@ -196,29 +206,33 @@ int main() {
         bottom_row++;
     }
 
-    int right_col = 0;
-    while (relative_positions.contains({ right_col + 1, 0 })) {
-        right_col++;
-    }
-
     int left_col = 0;
     while (relative_positions.contains({ left_col - 1, 0 })) {
         left_col--;
     }
 
-    uint64_t part1 = relative_positions[{ left_col, top_row }].id
+    int right_col = 0;
+    while (relative_positions.contains({ right_col + 1, 0 })) {
+        right_col++;
+    }
+
+    u64 part1 = relative_positions[{ left_col, top_row }].id
         * relative_positions[{ right_col, top_row }].id
         * relative_positions[{ left_col, bottom_row }].id
         * relative_positions[{ right_col, bottom_row }].id;
+
     std::cout << "part 1: " << part1 << '\n';
 
     std::vector<std::string> image;
 
+    // build the image line by line
     for (int y = top_row; y <= bottom_row; ++y) {
-        for (size_t line_y = 1; line_y < TILE_SIZE - 1; ++line_y) {
+        for (size_t i = 1; i < TILE_SIZE - 1; ++i) {
             std::string line {};
             for (int x = left_col; x <= right_col; ++x) {
-                line += relative_positions[{ x, y }].data[line_y].substr(1, TILE_SIZE - 2);
+                line += relative_positions[{ x, y }]
+                            .data[i]
+                            .substr(1, TILE_SIZE - 2);
             }
             image.push_back(line);
         }
@@ -244,6 +258,7 @@ int main() {
         rotations[i] = rotate_vector(rotations[i - 1]);
     }
 
+    // flip the image
     std::reverse(image.begin(), image.end());
 
     rotations[4] = image;
@@ -251,7 +266,7 @@ int main() {
         rotations[i] = rotate_vector(rotations[i - 1]);
     }
 
-    uint32_t part2 = 0;
+    size_t part2 = 0;
     for (const auto& rotation : rotations) {
         if (auto removed = remove_monsters(rotation); removed != rotation) {
             for (auto line : removed) {

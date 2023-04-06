@@ -1,8 +1,8 @@
-#include <iostream>
 #include <fstream>
+#include <iostream>
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
 
 std::vector<std::string> split(std::string s, const std::string delim, std::vector<std::string> acc = {}) {
     auto pos = s.find(delim);
@@ -16,7 +16,6 @@ std::vector<std::string> split(std::string s, const std::string delim, std::vect
 }
 
 struct Bag {
-    std::string color;
     bool searched = false;
     std::vector<Bag*> parents;
     std::vector<std::pair<int, Bag*>> children;
@@ -36,10 +35,9 @@ struct Bag {
 
     int children_sum() {
         int sum = 0;
-        for (auto& child : children) {
-            int amount = child.first;
+        for (auto& [amount, child] : children) {
             sum += amount;
-            sum += amount * child.second->children_sum();
+            sum += amount * child->children_sum();
         }
         return sum;
     }
@@ -55,11 +53,10 @@ int main() {
     std::map<std::string, Bag*> bags;
 
     auto get_bag = [&bags](std::string color) {
-        if (bags.find(color) != bags.end()) {
+        if (bags.contains(color)) {
             return bags[color];
         } else {
             auto bag = new Bag();
-            bag->color = color;
             bags.insert({ color, bag });
             return bag;
         }
@@ -97,6 +94,11 @@ int main() {
 
     std::cout << "part 1: " << bags["shiny gold"]->parents_count() << '\n';
     std::cout << "part 2: " << bags["shiny gold"]->children_sum() << '\n';
+
+    // deallocate the memory even though the OS will do it anyway
+    for (auto [_, bag] : bags) {
+        delete bag;
+    }
 
     return 0;
 }

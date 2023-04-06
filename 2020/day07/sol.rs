@@ -53,25 +53,22 @@ fn main() {
                 child_bag_color
             };
 
-            bags.entry(color.to_owned()).or_insert(RefCell::new(Bag {
-                searched: false,
-                parents: vec![],
-                children: vec![],
-            }));
+            bags.entry(color.to_owned())
+                .or_insert(RefCell::new(Bag {
+                    searched: false,
+                    parents: vec![],
+                    children: vec![],
+                }))
+                .borrow_mut()
+                .children
+                .push((amount, child_bag_color.to_owned()));
 
             bags.entry(child_bag_color.to_owned())
                 .or_insert(RefCell::new(Bag {
                     searched: false,
                     parents: vec![],
                     children: vec![],
-                }));
-
-            bags[color]
-                .borrow_mut()
-                .children
-                .push((amount, child_bag_color.to_owned()));
-
-            bags[child_bag_color]
+                }))
                 .borrow_mut()
                 .parents
                 .push(color.to_owned());

@@ -1,7 +1,7 @@
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <vector>
-#include <algorithm>
 
 bool valid_coordinate(const int x, const int y, const int width, const int height) {
     return 0 <= x && x < width && 0 <= y && y < height;
@@ -17,8 +17,10 @@ size_t get_nearby_seats(const std::vector<std::string>& seats, const int x, cons
             if (rx == 0 && ry == 0) {
                 continue;
             }
+
             int current_x = x + rx;
             int current_y = y + ry;
+
             if (valid_coordinate(current_x, current_y, line_length, number_of_lines)) {
                 if (seats[current_y][current_x] == '#') {
                     nearby_seats++;
@@ -37,11 +39,13 @@ size_t get_visible_seats(const std::vector<std::string>& seats, const int x, con
 
     for (int rx = -1; rx <= 1; ++rx) {
         for (int ry = -1; ry <= 1; ++ry) {
-            int current_x = x + rx;
-            int current_y = y + ry;
             if (rx == 0 && ry == 0) {
                 continue;
             }
+
+            int current_x = x + rx;
+            int current_y = y + ry;
+
             while (valid_coordinate(current_x, current_y, line_length, number_of_lines)) {
                 if (seats[current_y][current_x] == '#') {
                     visible_seats++;
@@ -59,20 +63,11 @@ size_t get_visible_seats(const std::vector<std::string>& seats, const int x, con
     return visible_seats;
 }
 
-template <typename T>
-bool vec_equal(const std::vector<T>& a, const std::vector<T>& b) {
-    if (a.size() != b.size()) {
-        return false;
-    }
-    return std::equal(a.begin(), a.end(), b.begin());
-}
-
 size_t occupied_seats(std::vector<std::string> seats,
-                      size_t (*f)(
-                          const std::vector<std::string>&,
-                          const int, const int
-                          ),
-                      const size_t tolerancy_limit) {
+    size_t (*f)(
+        const std::vector<std::string>&,
+        const int, const int),
+    const size_t tolerancy_limit) {
     size_t occupied_seats = 0;
     std::vector<std::string> seats_swap;
 
@@ -81,24 +76,25 @@ size_t occupied_seats(std::vector<std::string> seats,
     while (true) {
         for (size_t y = 0; y < seats.size(); ++y) {
             for (size_t x = 0; x < seats[0].length(); ++x) {
-                if (seats_swap[y][x] == 'L' && f(seats_swap, x, y) == 0) {
+                auto adjacent = f(seats_swap, x, y);
+                if (seats_swap[y][x] == 'L' && adjacent == 0) {
                     seats[y][x] = '#';
-                } else if (seats_swap[y][x] == '#' && f(seats_swap, x, y) >= tolerancy_limit) {
+                } else if (seats_swap[y][x] == '#' && adjacent >= tolerancy_limit) {
                     seats[y][x] = 'L';
                 }
             }
         }
 
-        if (vec_equal(seats, seats_swap)) {
+        if (seats == seats_swap) {
             break;
         }
 
         seats_swap = seats;
     }
 
-    for (size_t y = 0; y < seats.size(); ++y) {
-        for (size_t x = 0; x < seats[0].length(); ++x) {
-            if (seats[y][x] == '#') {
+    for (const auto& line : seats) {
+        for (auto c : line) {
+            if (c == '#') {
                 occupied_seats++;
             }
         }

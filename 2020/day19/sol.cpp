@@ -85,6 +85,7 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <string_view>
 #include <vector>
 
 struct Rule {
@@ -94,8 +95,8 @@ struct Rule {
 
 using Ruleset = std::map<int, Rule>;
 
-std::vector<std::string> match_rule(std::string message, const Ruleset& rules, int index);
-std::vector<std::string> match_rule_list(std::string message, const Ruleset& rules, const std::vector<int>& list);
+std::vector<std::string_view> match_rule(std::string_view message, const Ruleset& rules, int index);
+std::vector<std::string_view> match_rule_list(std::string_view message, const Ruleset& rules, const std::vector<int>& list);
 
 std::vector<std::string> split_string(std::string s, const std::string delim = " ", std::vector<std::string> acc = {}) {
     auto pos = s.find(delim);
@@ -108,11 +109,11 @@ std::vector<std::string> split_string(std::string s, const std::string delim = "
     }
 }
 
-std::vector<std::string> match_rule_list(std::string message, const Ruleset& rules, const std::vector<int>& list) {
-    std::vector<std::string> inputs = { message };
+std::vector<std::string_view> match_rule_list(std::string_view message, const Ruleset& rules, const std::vector<int>& list) {
+    std::vector<std::string_view> inputs = { message };
 
     for (auto subindex : list) {
-        std::vector<std::string> more_inputs;
+        std::vector<std::string_view> more_inputs;
         for (const auto& input : inputs) {
             for (const auto& rest : match_rule(input, rules, subindex)) {
                 more_inputs.push_back(rest);
@@ -129,7 +130,7 @@ std::vector<std::string> match_rule_list(std::string message, const Ruleset& rul
     return inputs;
 }
 
-std::vector<std::string> match_rule(std::string message, const Ruleset& rules, int index) {
+std::vector<std::string_view> match_rule(std::string_view message, const Ruleset& rules, int index) {
     auto rule = rules.at(index);
     if (rule.c != '\0') {
         if (message[0] == rule.c) {
@@ -140,7 +141,7 @@ std::vector<std::string> match_rule(std::string message, const Ruleset& rules, i
     } else if (rule.subrules.size() == 1) {
         return match_rule_list(message, rules, rule.subrules[0]);
     } else {
-        std::vector<std::string> result;
+        std::vector<std::string_view> result;
 
         for (const auto& rule_list : rule.subrules) {
             for (const auto& input : match_rule_list(message, rules, rule_list)) {
@@ -152,7 +153,7 @@ std::vector<std::string> match_rule(std::string message, const Ruleset& rules, i
     }
 }
 
-bool any_empty(const std::vector<std::string>& inputs) {
+bool any_empty(const std::vector<std::string_view>& inputs) {
     for (const auto& input : inputs) {
         if (input.empty()) {
             return true;
@@ -199,20 +200,21 @@ int main() {
 
     input.close();
 
-    int part1 = std::count_if(messages.cbegin(), messages.cend(), [&rules](std::string message) {
-        auto inputs = match_rule(message, rules, 0);
-        return any_empty(inputs);
-    });
+    auto solve = [](const Ruleset& rules, const std::vector<std::string>& messages) {
+        return std::count_if(messages.cbegin(), messages.cend(), [&rules](std::string_view message) {
+            auto inputs = match_rule(message, rules, 0);
+            return any_empty(inputs);
+        });
+    };
+
+    auto part1 = solve(rules, messages);
 
     std::cout << "part 1: " << part1 << '\n';
 
     rules[8] = { .subrules = { { 42 }, { 42, 8 } } };
     rules[11] = { .subrules = { { 42, 31 }, { 42, 11, 31 } } };
 
-    int part2 = std::count_if(messages.cbegin(), messages.cend(), [&rules](std::string message) {
-        auto inputs = match_rule(message, rules, 0);
-        return any_empty(inputs);
-    });
+    auto part2 = solve(rules, messages);
 
     std::cout << "part 2: " << part2 << '\n';
 
